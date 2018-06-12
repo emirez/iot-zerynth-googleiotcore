@@ -1,6 +1,7 @@
 import streams
 import json
 from wireless import wifi
+from bosch.bme280 import bme280
 
 # choose a wifi chip supporting secure sockets
 from espressif.esp32net import esp32wifi as wifi_driver
@@ -30,9 +31,16 @@ wifi_driver.auto_init()
 # place here your wifi configuration
 wifi.link("CASSINIguest",wifi.WIFI_WPA2,"Cassini2016!")
 
+# BME280 Sensor
+bmp = bme280.BME280(I2C1) # Connect SCL to IO17 and SDA to IO16
+print("Starting BME280 Sensor...")
+bmp.start()
+print("Ready!")
+print("--------------------------------------------------------")
+
 pkey = helpers.load_key('private.hex.key')
 device_conf = helpers.load_device_conf()
-publish_period = 5000
+publish_period = 20000
 
 # choose an appropriate way to get a valid timestamp (may be available through hardware RTC)
 def get_timestamp():
@@ -47,7 +55,12 @@ device.on_config(config_callback)
 device.mqtt.loop()
 
 while True:
-    print('publish random sample...')
-    device.publish_event(json.dumps({ 'asample': random(0,10) }))
+    print('Publishing...')
+    temp = bmp.get_temp()  # Read temperature
+    hum  = bmp.get_hum()   # Read humidity
+    prs  = bmp.get_press() # Read temperature
+    print("Temperature: ", temp, "C, ", "Humidity: ", hum, "%rH, ", "Pressure: ", prs, "Pascal")
+    #device.publish_event(json.dumps({ 'asample': random(0,10) }))
+    device.publish_event(json.dumps({ 'temp': temp }, { 'hum': hum } ))
     sleep(publish_period)
 
