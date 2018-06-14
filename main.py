@@ -1,22 +1,20 @@
+# Google IoT Core is tested with Zerynth Studio, ESP32 MCU and BME280 sensor.
+
 import streams
 import json
+import requests
+
 from wireless import wifi
 from bosch.bme280 import bme280
-
-# choose a wifi chip supporting secure sockets
 from espressif.esp32net import esp32wifi as wifi_driver
-
-import requests
-# import google cloud iot module
 from googlecloud.iot import iot
-
-# import helpers functions to easily load keys and device configuration
 import helpers
 
-# DEVICE KEY FILE MUST BE PLACED INSIDE PROJECT FOLDER
 new_resource('private.hex.key')
-# set device configuration inside this json file
 new_resource('device.conf.json')
+
+streams.serial()
+wifi_driver.auto_init()
 
 # define a callback for config updates
 def config_callback(config):
@@ -25,11 +23,8 @@ def config_callback(config):
     publish_period = config['publish_period']
     return {'publish_period': publish_period}
 
-streams.serial()
-wifi_driver.auto_init()
-
 # place here your wifi configuration
-wifi.link("CASSINIguest",wifi.WIFI_WPA2,"Cassini2016!")
+wifi.link("belkin.36ef",wifi.WIFI_WPA2,"34e966fb")
 
 # BME280 Sensor
 bmp = bme280.BME280(I2C1) # Connect SCL to IO17 and SDA to IO16
@@ -40,7 +35,7 @@ print("--------------------------------------------------------")
 
 pkey = helpers.load_key('private.hex.key')
 device_conf = helpers.load_device_conf()
-publish_period = 20000
+publish_period = 1000
 
 # choose an appropriate way to get a valid timestamp (may be available through hardware RTC)
 def get_timestamp():
@@ -59,8 +54,7 @@ while True:
     temp = bmp.get_temp()  # Read temperature
     hum  = bmp.get_hum()   # Read humidity
     prs  = bmp.get_press() # Read temperature
-    print("Temperature: ", temp, "C, ", "Humidity: ", hum, "%rH, ", "Pressure: ", prs, "Pascal")
-    #device.publish_event(json.dumps({ 'asample': random(0,10) }))
+    print("Temperature: ", temp, "C, ", "Humidity: ", hum, "%rH, ")
     device.publish_event(json.dumps({ 'temp': temp }, { 'hum': hum } ))
     sleep(publish_period)
 
