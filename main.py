@@ -55,6 +55,6 @@ while True:
     hum  = bmp.get_hum()   # Read humidity
     prs  = bmp.get_press() # Read temperature
     print("Temperature: ", temp, "C, ", "Humidity: ", hum, "%rH, ")
-    device.publish_event(json.dumps({ 'temp': temp }, { 'hum': hum } ))
+    device.publish_event(json.dumps({ 'Temperature': temp }))
     sleep(publish_period)
 
